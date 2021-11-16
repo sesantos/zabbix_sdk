@@ -1,0 +1,506 @@
+zabbix_export:
+  version: '5.4'
+  date: '2021-11-12T17:02:41Z'
+  groups:
+    -
+      uuid: 0d2d8be0e68241f8928409e673e9f3b0
+      name: SRLinux
+  templates:
+    -
+      uuid: 19cd2fbcd7fd44dfa8a147ad287e3e26
+      template: SRLinux_Template
+      name: SRLinux_Template
+      groups:
+        -
+          name: SRLinux
+      discovery_rules:
+        -
+          uuid: 5e081170e3654cb483c57dc0bcebdf6e
+          name: srlinux.bgp_neighbor
+          type: HTTP_AGENT
+          key: 'srlinux.bgp_neighbor.[{#NETINST},{#PEERID}]'
+          delay: 10s
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          filter:
+            conditions:
+              -
+                macro: '{#PEERADMINSTATE}'
+                value: ^enable$
+                formulaid: A
+          item_prototypes:
+            -
+              uuid: d9247209046c456581db94202230939c
+              name: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+              delay: 10s
+              trends: '0'
+              value_type: TEXT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/network-instance[name={#NETINST}]/protocols/bgp/neighbor[peer-address={#PEERID}]/session-state","datastore": "state"}]}}'
+              request_method: POST
+              trigger_prototypes:
+                -
+                  uuid: 7329f3973c884783895668413477a55e
+                  expression: 'last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#2)="established" and last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#1) <>"established"'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#2)<>"established" and last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#1) ="established"'
+                  name: 'Trigger-srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+                  priority: HIGH
+                  description: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]-down-error-code-[{#LASTERRORCODE}]'
+          url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/network-instance[name=*]/protocols/bgp/neighbor[peer-address=*]","datastore": "state"}]}}'
+          request_method: POST
+          lld_macro_paths:
+            -
+              lld_macro: '{#LASTERRORCODE}'
+              path: $.lasterrorcode
+            -
+              lld_macro: '{#NETINST}'
+              path: $.netins
+            -
+              lld_macro: '{#PEERADMINSTATE}'
+              path: $.peeradminstate
+            -
+              lld_macro: '{#PEERID}'
+              path: $.peerid
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0].["srl_nokia-network-instance:network-instance"]'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  var bgp_peers= []; // create an empty array
+                  
+                  
+                  var json = JSON.parse(value);
+                  for (i = 0; i < json.length; i++) {
+                    var netinstance_name = json[i].name;
+                    var net
+                    var bgp_neighbors = json[i].protocols["srl_nokia-bgp:bgp"].neighbor;
+                    for (j=0; j < bgp_neighbors.length; j++) {
+                      var bgp_peer_addr = bgp_neighbors[j]["peer-address"];
+                      var peer_admin_state = bgp_neighbors[j]["admin-state"];
+                      var last_notification_error_code = bgp_neighbors[j]["last-notification-error-code"];
+                      bgp_peers.push({
+                          netins: netinstance_name,
+                          peeradminstate: peer_admin_state,
+                          peerid: bgp_peer_addr,
+                          lasterrorcode: last_notification_error_code
+                      });
+                    }
+                  
+                    
+                  
+                  }
+                  
+                  return JSON.stringify(bgp_peers);
+                  
+                  
+                  
+        -
+          uuid: 0e0e16cd13a24013b733429cbecebcf0
+          name: srlinux.controlcard
+          type: HTTP_AGENT
+          key: 'srlinux.controlcard.[{#SLOTID}]'
+          delay: 10s
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          item_prototypes:
+            -
+              uuid: e23dc06109104472b4ea5e35be97ad20
+              name: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/cpu[index=all]/total/average-1","datastore": "state"}]}
+                
+                }
+              request_method: POST
+            -
+              uuid: e9a428f06a9443ec82bb6e90895f4327
+              name: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/cpu[index=all]/total/average-5","datastore": "state"}]}
+                
+                }
+              request_method: POST
+            -
+              uuid: 8dfbb2327737455b9cbb63ad9f91de62
+              name: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/cpu[index=all]/total/average-15","datastore": "state"}]}
+                
+                }
+              request_method: POST
+            -
+              uuid: 5fc82d77234940a492ca1579adcfc00b
+              name: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/cpu[index=all]/total/instant","datastore": "state"}]}
+                
+                }
+              request_method: POST
+            -
+              uuid: 49f10823bdc343228f0a8ba54bd88644
+              name: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/memory/utilization","datastore": "state"}]}
+                
+                }
+              request_method: POST
+            -
+              uuid: 32ff95959263429ab96326db22725d03
+              name: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              type: HTTP_AGENT
+              key: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              value_type: FLOAT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/platform/control[slot={#SLOTID}]/temperature/instant","datastore": "state"}]}
+                
+                }
+              post_type: JSON
+              request_method: POST
+          graph_prototypes:
+            -
+              uuid: 2f0e1b619f174716a56296ccf5302518
+              name: 'srlinux-controlcard-cpu-[{#SLOTID}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+                -
+                  sortorder: '2'
+                  color: 2774A4
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+                -
+                  sortorder: '3'
+                  color: 00BFFF
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+                -
+                  sortorder: '4'
+                  color: A54F10
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+            -
+              uuid: 3496fb1ff6d545548389f4027c7ed633
+              name: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+            -
+              uuid: 7ada0f8c8cb14aaea02734189ca7aabd
+              name: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+          url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/control[slot=*]","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+          lld_macro_paths:
+            -
+              lld_macro: '{#SLOTID}'
+              path: $.slot
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0].[''srl_nokia-platform-control:control'']'
+        -
+          uuid: 79be793502d541d9a077ca421911190a
+          name: srlinux.interfaces
+          type: HTTP_AGENT
+          key: 'srlinux.interface.[{#NAME}]'
+          delay: 10s
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          filter:
+            conditions:
+              -
+                macro: '{#ADMINSTATE}'
+                value: ^enable$
+                formulaid: A
+              -
+                macro: '{#NAME}'
+                value: '^ethernet*'
+                formulaid: B
+              -
+                macro: '{#NAME}'
+                value: '^mgmt*'
+                formulaid: C
+              -
+                macro: '{#NAME}'
+                value: '^irb*'
+                formulaid: D
+          item_prototypes:
+            -
+              uuid: 00578ffafe91491bbc2bf74bffc48900
+              name: 'srlinux-interface-in-rate-bps-[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux-interface-in-rate-bps-[{#NAME}]'
+              delay: 15s
+              history: 2d
+              trends: 30d
+              value_type: FLOAT
+              units: bps
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/in-bps","datastore": "state"}]}
+                }
+              post_type: JSON
+              request_method: POST
+            -
+              uuid: a8a6f2939e314f36864f309b5f535472
+              name: 'srlinux-interface-out-rate-bps-[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux-interface-out-rate-bps-[{#NAME}]'
+              delay: 15s
+              history: 2d
+              trends: 30d
+              value_type: FLOAT
+              units: bps
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/out-bps","datastore": "state"}]}
+                }
+              post_type: JSON
+              request_method: POST
+            -
+              uuid: 4cba1bb7bdab41dd961bf38a6f1792e7
+              name: 'srlinux-interface-state-[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux-interface-state-[{#NAME}]'
+              delay: 15s
+              history: 30d
+              trends: '0'
+              value_type: TEXT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/oper-state","datastore": "state"}]}
+                
+                }
+              post_type: JSON
+              request_method: POST
+              tags:
+                -
+                  tag: interface-oper-state
+                  value: 'true'
+              trigger_prototypes:
+                -
+                  uuid: d9dbb6575d17403a8aae37a15ade44ee
+                  expression: 'last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#2)="up" and last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#1)="down"'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#2)="down" and last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#1)="up"'
+                  name: 'Trigger-srlinux-Interface-["{#NAME}"]'
+                  priority: HIGH
+                  description: 'srlinux-interface-state-[{#NAME}]-oper-down-reason-[{#OPERDOWNREASON}]'
+          graph_prototypes:
+            -
+              uuid: 64902177fa3b44d180fc986aa08ae625
+              name: 'srlinux-interface-in-out-rate-bps-[{#NAME}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-interface-in-rate-bps-[{#NAME}]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux-interface-out-rate-bps-[{#NAME}]'
+          url: 'http://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/interface[name=*]","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+          lld_macro_paths:
+            -
+              lld_macro: '{#ADMINSTATE}'
+              path: '$.["admin-state"]'
+            -
+              lld_macro: '{#NAME}'
+              path: $.name
+            -
+              lld_macro: '{#OPERDOWNREASON}'
+              path: '$.["oper-down-reason"]'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0].[''srl_nokia-interfaces:interface'']'
+      macros:
+        -
+          macro: '{$IPADDR}'
+          description: 'Enter the IP Address'
+        -
+          macro: '{$JSONPORT}'
+          value: '80'
+        -
+          macro: '{$PWD}'
+          type: SECRET_TEXT
+          description: 'Enter SR Linux Json-RPC Password'
+        -
+          macro: '{$USER}'
+          value: admin
+          description: 'Enter SR Linux Json-RPC Username'
