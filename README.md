@@ -1,8 +1,8 @@
-# Installation
+## Installation
 
         python3.6 setup.py install
 
-# Configuration parameters
+## Configuration parameters
 
 Edit your ***setup.yaml*** file according to your environment.
 
@@ -20,7 +20,7 @@ srlinux_setup:
     snmp_community: "public" #snmp comunity configured on SR Linux Devices
 ```
 
-# Load the SR Linux template and create the discovery rules
+## Load the SR Linux template and create the discovery rules
 
 ```
 zabbix_setup_srlinux_env -f templates/ -s setup.yaml
