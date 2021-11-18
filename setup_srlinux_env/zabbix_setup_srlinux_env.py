@@ -37,9 +37,13 @@ def main():
     srlinux_username=setup['srlinux_setup']['user_name']
     srlinux_password=setup['srlinux_setup']['password']
     srlinux_jsonrpc_port=setup['srlinux_setup']['json_rpc_port']
+    srlinux_jsonrpc_proto=setup['srlinux_setup']['proto']
+    
+    if srlinux_jsonrpc_proto not in ['http','https']:
+        print("Only protocols http or https are allowed, please fix you srlinux_setup:proto in setup.yaml")
+        exit(1)
+        
     srlinux_snmp_comunity=setup['srlinux_setup']['snmp_community']
-
-
 
 
 
@@ -133,6 +137,7 @@ def main():
 
     zapi.template.update(templateid=templateid,macros=[{"macro":"{$PWD}","value":srlinux_password}, 
                                                     {"macro":"{$JSONPORT}","value":srlinux_jsonrpc_port}, 
+                                                    {"macro":"{$PROTO}","value":srlinux_jsonrpc_proto},
                                                     {"macro":"{$USER}","value":srlinux_username}, 
                                                     {"macro":"{$IPADDR}", "value":""}])
 
