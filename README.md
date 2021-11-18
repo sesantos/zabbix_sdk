@@ -17,6 +17,7 @@ srlinux_setup:
     user_name: "admin"
     password: "admin"
     json_rpc_port: "80" 
+    proto: "http"
     snmp_community: "public" #snmp comunity configured on SR Linux Devices
 ```
 
