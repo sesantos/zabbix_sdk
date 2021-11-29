@@ -170,8 +170,9 @@ def main():
 
     if druleid:
         drule_action=zapi.action.get(output="id",filter={"name":"SR Linux Discovery action"})
-        zapi.action.delete(params=drule_action[0]['actionid'])
-        zapi.drule.delete(params=druleid[0]['druleid'])
+        if drule_action:
+            zapi.action.delete(params=drule_action[0]['actionid'])
+            zapi.drule.delete(params=druleid[0]['druleid'])
 
     druleid=zapi.drule.create(drulesrlinux)
     druleid=druleid["druleids"][0]
@@ -209,7 +210,13 @@ def main():
                     ],
                     "operationtype": 6,
                 },
-
+                {
+                    "opinventory": {
+                        "inventory_mode": 1,
+                    },
+                    "operationtype": 10,
+                },
+                
             ]
 
 

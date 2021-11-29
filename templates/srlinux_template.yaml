@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.4'
-  date: '2021-11-18T11:31:47Z'
+  date: '2021-11-29T13:25:40Z'
   groups:
     -
       uuid: 0d2d8be0e68241f8928409e673e9f3b0
@@ -13,12 +13,291 @@ zabbix_export:
       groups:
         -
           name: SRLinux
+      items:
+        -
+          uuid: 488acd9bb47140ff9f8896d269ad1666
+          name: srlinux.platform.chassis.mac-address
+          type: HTTP_AGENT
+          key: srlinux.platform.chassis.mac-address
+          delay: 10s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          inventory_link: MACADDRESS_A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/chassis/mac-address","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+        -
+          uuid: 0c57fb84110443ab9a5549a03025c35e
+          name: srlinux.platform.chassis.serial-number
+          type: HTTP_AGENT
+          key: srlinux.platform.chassis.serial-number
+          delay: 10s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          inventory_link: SERIALNO_A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/chassis/serial-number","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+        -
+          uuid: 82928e3ceadf41c5a24a7546cfd75117
+          name: srlinux.platform.chassis.type
+          type: HTTP_AGENT
+          key: srlinux.platform.chassis.type
+          delay: 10s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          inventory_link: TYPE
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/chassis/type","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+        -
+          uuid: 5c53475bdf3c45209315556fa6d898fc
+          name: 'srlinux.platform.control.software-version.[A]'
+          type: HTTP_AGENT
+          key: 'srlinux.platform.control.software-version.[A]'
+          delay: 10s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          inventory_link: OS
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/control[slot=A]/software-version","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+        -
+          uuid: c3294e16962b4e408cd34c901817906c
+          name: srlinux.system.name.host-name
+          type: HTTP_AGENT
+          key: srlinux.system.name.host-name
+          delay: 10s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          inventory_link: NAME
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/system/name/host-name","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
       discovery_rules:
         -
-          uuid: 5e081170e3654cb483c57dc0bcebdf6e
-          name: srlinux.bgp_neighbor
+          uuid: 79be793502d541d9a077ca421911190a
+          name: srlinux.interface
           type: HTTP_AGENT
-          key: 'srlinux.bgp_neighbor.[{#NETINST},{#PEERID}]'
+          key: 'srlinux.interface.[{#NAME}]'
+          delay: 10s
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          filter:
+            conditions:
+              -
+                macro: '{#ADMINSTATE}'
+                value: ^enable$
+                formulaid: A
+              -
+                macro: '{#NAME}'
+                value: '^ethernet*'
+                formulaid: C
+              -
+                macro: '{#NAME}'
+                value: '^mgmt*'
+                formulaid: D
+              -
+                macro: '{#NAME}'
+                value: '^irb*'
+                formulaid: E
+              -
+                macro: '{#BREAKOUT}'
+                operator: NOT_EXISTS
+                formulaid: B
+          item_prototypes:
+            -
+              uuid: 4cba1bb7bdab41dd961bf38a6f1792e7
+              name: 'srlinux.interface.oper-state.[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux.interface.oper-state.[{#NAME}]'
+              delay: 15s
+              history: 30d
+              trends: '0'
+              value_type: TEXT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/oper-state","datastore": "state"}]}
+                
+                }
+              post_type: JSON
+              request_method: POST
+              tags:
+                -
+                  tag: interface-oper-state
+                  value: 'true'
+              trigger_prototypes:
+                -
+                  uuid: d9dbb6575d17403a8aae37a15ade44ee
+                  expression: 'last(/SRLinux_Template/srlinux.interface.oper-state.[{#NAME}],#2)="up" and last(/SRLinux_Template/srlinux.interface.oper-state.[{#NAME}],#1)="down"'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/SRLinux_Template/srlinux.interface.oper-state.[{#NAME}],#2)="down" and last(/SRLinux_Template/srlinux.interface.oper-state.[{#NAME}],#1)="up"'
+                  name: 'srlinux.interface.oper-state.["{#NAME}"]'
+                  priority: HIGH
+                  description: 'srlinux-interface-state-[{#NAME}]-oper-down-reason-[{#OPERDOWNREASON}]'
+            -
+              uuid: 00578ffafe91491bbc2bf74bffc48900
+              name: 'srlinux.interface.traffic-rate.in-bps.[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux.interface.traffic-rate.in-bps.[{#NAME}]'
+              delay: 15s
+              history: 2d
+              trends: 30d
+              value_type: FLOAT
+              units: bps
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/in-bps","datastore": "state"}]}
+                }
+              post_type: JSON
+              request_method: POST
+            -
+              uuid: a8a6f2939e314f36864f309b5f535472
+              name: 'srlinux.interface.traffic-rate.out-bps.[{#NAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux.interface.traffic-rate.out-bps.[{#NAME}]'
+              delay: 15s
+              history: 2d
+              trends: 30d
+              value_type: FLOAT
+              units: bps
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+              url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "method": "get",
+                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/out-bps","datastore": "state"}]}
+                }
+              post_type: JSON
+              request_method: POST
+          graph_prototypes:
+            -
+              uuid: 64902177fa3b44d180fc986aa08ae625
+              name: 'srlinux.interface.traffic-rate.in-out-bps.[{#NAME}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux.interface.traffic-rate.in-bps.[{#NAME}]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: SRLinux_Template
+                    key: 'srlinux.interface.traffic-rate.out-bps.[{#NAME}]'
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/interface[name=*]","datastore": "state"}]}}'
+          post_type: JSON
+          request_method: POST
+          lld_macro_paths:
+            -
+              lld_macro: '{#ADMINSTATE}'
+              path: '$.["admin-state"]'
+            -
+              lld_macro: '{#BREAKOUT}'
+              path: '$["breakout-mode"]["num-channels"]'
+            -
+              lld_macro: '{#NAME}'
+              path: $.name
+            -
+              lld_macro: '{#OPERDOWNREASON}'
+              path: '$.["oper-down-reason"]'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0].[''srl_nokia-interfaces:interface'']'
+        -
+          uuid: 5e081170e3654cb483c57dc0bcebdf6e
+          name: srlinux.network-instance.protocols.bgp.neighbor
+          type: HTTP_AGENT
+          key: 'srlinux.network-instance.protocols.bgp.neighbor.[{#NETINST},{#PEERID}]'
           delay: 10s
           authtype: BASIC
           username: '{$USER}'
@@ -32,9 +311,9 @@ zabbix_export:
           item_prototypes:
             -
               uuid: d9247209046c456581db94202230939c
-              name: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+              name: 'srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}]'
               type: HTTP_AGENT
-              key: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+              key: 'srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}]'
               delay: 10s
               trends: '0'
               value_type: TEXT
@@ -52,10 +331,10 @@ zabbix_export:
               trigger_prototypes:
                 -
                   uuid: 7329f3973c884783895668413477a55e
-                  expression: 'last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#2)="established" and last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#1) <>"established"'
+                  expression: 'last(/SRLinux_Template/srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}],#2)="established" and last(/SRLinux_Template/srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}],#1) <>"established"'
                   recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#2)<>"established" and last(/SRLinux_Template/srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}],#1) ="established"'
-                  name: 'Trigger-srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]'
+                  recovery_expression: 'last(/SRLinux_Template/srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}],#2)<>"established" and last(/SRLinux_Template/srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}],#1) ="established"'
+                  name: 'srlinux.network-instance.protocols.bgp.neighbor.session-state.[vrf-{#NETINST},{#PEERID}]'
                   priority: HIGH
                   description: 'srlinux-bgp-peer-session-state-[vrf-{#NETINST},{#PEERID}]-down-error-code-[{#LASTERRORCODE}]'
           url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
@@ -110,9 +389,9 @@ zabbix_export:
                   return JSON.stringify(bgp_peers);
         -
           uuid: 0e0e16cd13a24013b733429cbecebcf0
-          name: srlinux.controlcard
+          name: srlinux.platform.control
           type: HTTP_AGENT
-          key: 'srlinux.controlcard.[{#SLOTID}]'
+          key: 'srlinux.platform.control.[{#SLOTID}]'
           delay: 10s
           authtype: BASIC
           username: '{$USER}'
@@ -120,9 +399,9 @@ zabbix_export:
           item_prototypes:
             -
               uuid: e23dc06109104472b4ea5e35be97ad20
-              name: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+              name: 'srlinux.platform.control.cpu.total.average-1.[ALL,{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+              key: 'srlinux.platform.control.cpu.total.average-1.[ALL,{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -144,9 +423,9 @@ zabbix_export:
               request_method: POST
             -
               uuid: e9a428f06a9443ec82bb6e90895f4327
-              name: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+              name: 'srlinux.platform.control.cpu.total.average-5.[ALL,{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+              key: 'srlinux.platform.control.cpu.total.average-5.[ALL,{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -168,9 +447,9 @@ zabbix_export:
               request_method: POST
             -
               uuid: 8dfbb2327737455b9cbb63ad9f91de62
-              name: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+              name: 'srlinux.platform.control.cpu.total.average-15.[ALL,{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+              key: 'srlinux.platform.control.cpu.total.average-15.[ALL,{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -192,9 +471,9 @@ zabbix_export:
               request_method: POST
             -
               uuid: 5fc82d77234940a492ca1579adcfc00b
-              name: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+              name: 'srlinux.platform.control.cpu.total.instant.[ALL,{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+              key: 'srlinux.platform.control.cpu.total.instant.[ALL,{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -216,9 +495,9 @@ zabbix_export:
               request_method: POST
             -
               uuid: 49f10823bdc343228f0a8ba54bd88644
-              name: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              name: 'srlinux.platform.control.memory.utilization.[{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              key: 'srlinux.platform.control.memory.utilization.[{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -240,9 +519,9 @@ zabbix_export:
               request_method: POST
             -
               uuid: 32ff95959263429ab96326db22725d03
-              name: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              name: 'srlinux.platform.control.temperature.instant.[{#SLOTID}]'
               type: HTTP_AGENT
-              key: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              key: 'srlinux.platform.control.temperature.instant.[{#SLOTID}]'
               value_type: FLOAT
               authtype: BASIC
               username: '{$USER}'
@@ -266,52 +545,52 @@ zabbix_export:
           graph_prototypes:
             -
               uuid: 2f0e1b619f174716a56296ccf5302518
-              name: 'srlinux-controlcard-cpu-[{#SLOTID}]'
+              name: 'srlinux.platform.control.cpu.total.[ALL,{#SLOTID}]'
               graph_items:
                 -
                   sortorder: '1'
                   color: 1A7C11
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-cpu-total-instant-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.cpu.total.instant.[ALL,{#SLOTID}]'
                 -
                   sortorder: '2'
                   color: 2774A4
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-cpu-total-average-1-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.cpu.total.average-1.[ALL,{#SLOTID}]'
                 -
                   sortorder: '3'
                   color: 00BFFF
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-cpu-total-average-5-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.cpu.total.average-5.[ALL,{#SLOTID}]'
                 -
                   sortorder: '4'
                   color: A54F10
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-cpu-total-average-15-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.cpu.total.average-15.[ALL,{#SLOTID}]'
             -
               uuid: 3496fb1ff6d545548389f4027c7ed633
-              name: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+              name: 'srlinux.platform.control.memory.utilization.[{#SLOTID}]'
               graph_items:
                 -
                   sortorder: '1'
                   color: 1A7C11
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-memory-utilization-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.memory.utilization.[{#SLOTID}]'
             -
               uuid: 7ada0f8c8cb14aaea02734189ca7aabd
-              name: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+              name: 'srlinux.platform.control.temperature.instant.[{#SLOTID}]'
               graph_items:
                 -
                   sortorder: '1'
                   color: 1A7C11
                   item:
                     host: SRLinux_Template
-                    key: 'srlinux-controlcard-temperature-[{#SLOTID}]'
+                    key: 'srlinux.platform.control.temperature.instant.[{#SLOTID}]'
           url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
           posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/platform/control[slot=*]","datastore": "state"}]}}'
           post_type: JSON
@@ -326,10 +605,146 @@ zabbix_export:
               parameters:
                 - '$.result[0].[''srl_nokia-platform-control:control'']'
         -
-          uuid: 79be793502d541d9a077ca421911190a
-          name: srlinux.interfaces
+          uuid: ef148dbc0066468abc9604aeff3f89cc
+          name: 'srlinux.system.lldp.interface.neighbors.[{#INFNAME},{#NEIGHBORSYSTEMNAME}]'
           type: HTTP_AGENT
-          key: 'srlinux.interface.[{#NAME}]'
+          key: 'srlinux.system.lldp.interface.neighbors.[{#INFNAME},{#NEIGHBORSYSTEMNAME}]'
+          delay: 10s
+          authtype: BASIC
+          username: '{$USER}'
+          password: '{$PWD}'
+          filter:
+            conditions:
+              -
+                macro: '{#INFNAME}'
+                value: '^mgmt*'
+                formulaid: A
+              -
+                macro: '{#INFNAME}'
+                value: '^ethernet*'
+                formulaid: B
+          item_prototypes:
+            -
+              uuid: 37d4de39a0974ddbbbd79757d24bdce3
+              name: 'srlinux.system.lldp.interface.neighbors.uptime.[{#INFNAME},{#NEIGHBORSYSTEMNAME}]'
+              type: HTTP_AGENT
+              key: 'srlinux.system.lldp.interface.neighbors.uptime.[{#INFNAME},{#NEIGHBORSYSTEMNAME}]'
+              delay: 15s
+              trends: '0'
+              value_type: TEXT
+              authtype: BASIC
+              username: '{$USER}'
+              password: '{$PWD}'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.result[0]'
+                -
+                  type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var receivedJSON= JSON.parse(value);
+                      
+                          const fm = new Date(receivedJSON["first-message"]);
+                          const lu = new Date(receivedJSON["last-update"]);
+                          const diffTime = Math.abs(lu - fm);
+                          const uptimed = Math.trunc(diffTime / 1000 / 3600 / 24);
+                          const uptimeh = Math.trunc(diffTime / 1000 / 3600 -  24 * uptimed);
+                          const uptimem = Math.trunc(diffTime / 1000 / 60  -  60 * uptimeh -  24 * 60 * uptimed);
+                          const uptimes = Math.trunc(diffTime / 1000 -  3600 * uptimeh -  24 * 3600 * uptimed - 60 * uptimem);;
+                          const uptime = uptimed.toString() + " Days " + uptimeh.toString() + " Hours " + uptimem.toString() + " Min " + uptimes.toString() + " Sec"
+                          // debug
+                          // console.log(uptime)
+                                      
+                          return JSON.stringify(uptime);
+              url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+              posts: |
+                {
+                  "jsonrpc": "2.0",
+                  "id": 0,
+                  "method": "get",
+                  "params": {
+                      "commands": [
+                          {
+                              "path": "/system/lldp/interface[name={#INFNAME}]/neighbor[id={#NEIGHBORID}]",
+                              "datastore": "state",
+                              "recursive": true
+                          }
+                      ]
+                  }
+                }
+              post_type: JSON
+              request_method: POST
+          url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
+          posts: |
+            {
+              "jsonrpc": "2.0",
+              "id": 0,
+              "method": "get",
+              "params": {
+                  "commands": [
+                      {
+                          "path": "/system/lldp/interface[name=*]/neighbor[id=*]",
+                          "datastore": "state",
+                          "recursive": true
+                      }
+                  ]
+              }
+            }
+          post_type: JSON
+          request_method: POST
+          lld_macro_paths:
+            -
+              lld_macro: '{#INFNAME}'
+              path: $.infname
+            -
+              lld_macro: '{#NEIGHBORID}'
+              path: $.neighborid
+            -
+              lld_macro: '{#NEIGHBORSYSTEMNAME}'
+              path: $.neighborsystemname
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.result[0].interface'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |2
+                      // create an empty array to flattern info about LLDP neighbors
+                      var lldpNeighbors = []; 
+                  
+                      var receivedJSON= JSON.parse(value);
+                      for (i = 0; i < receivedJSON.length; i++) {
+                          if (receivedJSON[i].hasOwnProperty("neighbor")){
+                              var name = receivedJSON[i].name;
+                              var neighbors = receivedJSON[i].neighbor;
+                              // for debug
+                              //console.log(i)
+                              for (n = 0; n < neighbors.length; n++) {
+                                  lldpNeighbors.push({
+                                      infname: name, 
+                                      neighborid: neighbors[n].id,
+                                      neighborsystemname: neighbors[n]["system-name"],
+                                      firstmessage: neighbors[n]["first-message"],
+                                      lastupdate: neighbors[n]["last-update"],
+                                  })
+                                  
+                              }
+                  
+                          }
+                  
+                      }
+                      // for debug
+                      // console.log(JSON.stringify(lldpNeighbors))
+                      return JSON.stringify(lldpNeighbors);
+        -
+          uuid: 1fe961d5caea4755b4070135cde30e2a
+          name: srlinux.system.lldp.interface
+          type: HTTP_AGENT
+          key: 'srlinux.system.lldp.interface.[{#NAME}]'
           delay: 10s
           authtype: BASIC
           username: '{$USER}'
@@ -349,20 +764,16 @@ zabbix_export:
                 value: '^mgmt*'
                 formulaid: C
               -
-                macro: '{#NAME}'
-                value: '^irb*'
+                macro: '{#OPERSTATE}'
+                value: ^up$
                 formulaid: D
           item_prototypes:
             -
-              uuid: 00578ffafe91491bbc2bf74bffc48900
-              name: 'srlinux-interface-in-rate-bps-[{#NAME}]'
+              uuid: 9de4c14881e44e9a9befdb3b1a920ebc
+              name: 'srlinux.system.lldp.interface.oper-state.[{#NAME}]'
               type: HTTP_AGENT
-              key: 'srlinux-interface-in-rate-bps-[{#NAME}]'
+              key: 'srlinux.system.lldp.interface.oper-state.[{#NAME}]'
               delay: 15s
-              history: 2d
-              trends: 30d
-              value_type: FLOAT
-              units: bps
               authtype: BASIC
               username: '{$USER}'
               password: '{$PWD}'
@@ -371,26 +782,37 @@ zabbix_export:
                   type: JSONPATH
                   parameters:
                     - '$.result[0]'
+                -
+                  type: REGEX
+                  parameters:
+                    - up
+                    - '1'
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '0'
               url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
               posts: |
                 {
-                "jsonrpc": "2.0",
-                "id": 0,
-                "method": "get",
-                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/in-bps","datastore": "state"}]}
+                  "jsonrpc": "2.0",
+                  "id": 0,
+                  "method": "get",
+                  "params": {
+                      "commands": [
+                          {
+                              "path": "/system/lldp/interface[name={#NAME}]/oper-state",
+                              "datastore": "state",
+                              "recursive": true
+                          }
+                      ]
+                  }
                 }
               post_type: JSON
               request_method: POST
             -
-              uuid: a8a6f2939e314f36864f309b5f535472
-              name: 'srlinux-interface-out-rate-bps-[{#NAME}]'
+              uuid: 8a9847ec713f429eb8bca265c46924c9
+              name: 'srlinux.system.lldp.interface.statistics.frame-rate-in.[{#NAME}]'
               type: HTTP_AGENT
-              key: 'srlinux-interface-out-rate-bps-[{#NAME}]'
+              key: 'srlinux.system.lldp.interface.statistics.frame-rate-in.[{#NAME}]'
               delay: 15s
-              history: 2d
-              trends: 30d
-              value_type: FLOAT
-              units: bps
               authtype: BASIC
               username: '{$USER}'
               password: '{$PWD}'
@@ -399,25 +821,34 @@ zabbix_export:
                   type: JSONPATH
                   parameters:
                     - '$.result[0]'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
               url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
               posts: |
                 {
-                "jsonrpc": "2.0",
-                "id": 0,
-                "method": "get",
-                "params": {"commands": [{"path": "/interface[name={#NAME}]/traffic-rate/out-bps","datastore": "state"}]}
+                  "jsonrpc": "2.0",
+                  "id": 0,
+                  "method": "get",
+                  "params": {
+                      "commands": [
+                          {
+                              "path": "/system/lldp/interface[name={#NAME}]/statistics/frame-in",
+                              "datastore": "state",
+                              "recursive": true
+                          }
+                      ]
+                  }
                 }
               post_type: JSON
               request_method: POST
             -
-              uuid: 4cba1bb7bdab41dd961bf38a6f1792e7
-              name: 'srlinux-interface-state-[{#NAME}]'
+              uuid: 29089d9207de444191407f02b8fd56e8
+              name: 'srlinux.system.lldp.interface.statistics.frame-rate-out.[{#NAME}]'
               type: HTTP_AGENT
-              key: 'srlinux-interface-state-[{#NAME}]'
+              key: 'srlinux.system.lldp.interface.statistics.frame-rate-out.[{#NAME}]'
               delay: 15s
-              history: 30d
-              trends: '0'
-              value_type: TEXT
               authtype: BASIC
               username: '{$USER}'
               password: '{$PWD}'
@@ -426,49 +857,30 @@ zabbix_export:
                   type: JSONPATH
                   parameters:
                     - '$.result[0]'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
               url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
               posts: |
                 {
-                "jsonrpc": "2.0",
-                "id": 0,
-                "method": "get",
-                "params": {"commands": [{"path": "/interface[name={#NAME}]/oper-state","datastore": "state"}]}
-                
+                  "jsonrpc": "2.0",
+                  "id": 0,
+                  "method": "get",
+                  "params": {
+                      "commands": [
+                          {
+                              "path": "/system/lldp/interface[name={#NAME}]/statistics/frame-out",
+                              "datastore": "state",
+                              "recursive": true
+                          }
+                      ]
+                  }
                 }
               post_type: JSON
               request_method: POST
-              tags:
-                -
-                  tag: interface-oper-state
-                  value: 'true'
-              trigger_prototypes:
-                -
-                  uuid: d9dbb6575d17403a8aae37a15ade44ee
-                  expression: 'last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#2)="up" and last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#1)="down"'
-                  recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#2)="down" and last(/SRLinux_Template/srlinux-interface-state-[{#NAME}],#1)="up"'
-                  name: 'Trigger-srlinux-Interface-["{#NAME}"]'
-                  priority: HIGH
-                  description: 'srlinux-interface-state-[{#NAME}]-oper-down-reason-[{#OPERDOWNREASON}]'
-          graph_prototypes:
-            -
-              uuid: 64902177fa3b44d180fc986aa08ae625
-              name: 'srlinux-interface-in-out-rate-bps-[{#NAME}]'
-              graph_items:
-                -
-                  sortorder: '1'
-                  color: 1A7C11
-                  item:
-                    host: SRLinux_Template
-                    key: 'srlinux-interface-in-rate-bps-[{#NAME}]'
-                -
-                  sortorder: '2'
-                  color: F63100
-                  item:
-                    host: SRLinux_Template
-                    key: 'srlinux-interface-out-rate-bps-[{#NAME}]'
           url: '{$PROTO}://{HOST.CONN}:{$JSONPORT}/jsonrpc'
-          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/interface[name=*]","datastore": "state"}]}}'
+          posts: '{"jsonrpc": "2.0","id": 0,"method": "get","params": {"commands": [{"path": "/system/lldp/interface[name=*]","datastore": "state"}]}}'
           post_type: JSON
           request_method: POST
           lld_macro_paths:
@@ -479,13 +891,16 @@ zabbix_export:
               lld_macro: '{#NAME}'
               path: $.name
             -
-              lld_macro: '{#OPERDOWNREASON}'
-              path: '$.["oper-down-reason"]'
+              lld_macro: '{#NEIGHBOR}'
+              path: $.neighbor
+            -
+              lld_macro: '{#OPERSTATE}'
+              path: '$.["oper-state"]'
           preprocessing:
             -
               type: JSONPATH
               parameters:
-                - '$.result[0].[''srl_nokia-interfaces:interface'']'
+                - '$.result[0].interface'
       macros:
         -
           macro: '{$IPADDR}'
