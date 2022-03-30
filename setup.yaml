@@ -1,6 +1,6 @@
 zabbix_instance:
     ip: localhost
-    port: 8081 #default is 8080
+    port: 80
     user: Admin
     password: zabbix
 srlinux_setup:
